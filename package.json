@@ -20,7 +20,9 @@
     "express-validator": "^6.15.0",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
+    "moment": "^2.29.4",
     "node-fetch": "^2.6.9",
+    "query-string": "^8.1.0",
     "ts-node": "^10.9.1",
     "validator": "^13.9.0"
   },

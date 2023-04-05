@@ -10,17 +10,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model SpotifyToken {
+  id            String   @id @default(uuid())
+  access_token  String
+  refresh_token String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  User          User[]
+}
+
 model User {
-  id           String    @id @default(uuid())
-  name         String
-  email        String    @unique
-  spotifyId    String?   @unique
-  birthdate    DateTime?
-  profileImage String?
-  bio          String?
-  provider     String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String        @id @default(uuid())
+  name            String
+  email           String        @unique
+  birthdate       DateTime?
+  profileImage    String?
+  bio             String?
+  provider        String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  spotifyId       SpotifyToken? @relation(fields: [spotifyTokensId], references: [id])
+  spotifyTokensId String?
 }
 
 model Code {
