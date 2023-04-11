@@ -27,6 +27,7 @@ const authenticateToken = (req: any, res: any, next: any) => {
                 name: true,
                 bio: true,
                 birthdate: true,
+                spotifyTokensId: true
 
             }
         })

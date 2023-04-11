@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "Activity" ALTER COLUMN "latitude" DROP NOT NULL,
+ALTER COLUMN "longitude" DROP NOT NULL,
+ALTER COLUMN "song_name" DROP NOT NULL,
+ALTER COLUMN "song_img" DROP NOT NULL,
+ALTER COLUMN "song_link" DROP NOT NULL;

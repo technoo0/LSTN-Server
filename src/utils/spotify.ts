@@ -2,6 +2,7 @@ import axios from "axios";
 import { type } from "os";
 import { db } from "./db";
 import moment from "moment"
+import { CloseUser, FinalUser } from "../types/user";
 
 const getSpotifyToken = async (uid: string) => {
     const user = await db.user.findFirst({
@@ -43,11 +44,9 @@ const isMoreThanAnHourAgo = (datec: Date) => {
     // Subtract one hour from the current date and time
     const oneHourAgo = moment().subtract(1, 'hour');
 
-    // Check if a given date is more than an hour ago
-    console.log("updateAtdate is ", datec)
+
     const dateToCheck = moment(datec);
-    console.log(dateToCheck.hours(), dateToCheck.minutes())
-    console.log(oneHourAgo.hours(), oneHourAgo.minutes())
+
     const isMoreThanAnHourAgo = dateToCheck.isBefore(oneHourAgo);
     return isMoreThanAnHourAgo
 }
@@ -72,32 +71,111 @@ const checkTokenandRefresh = async (uid: string) => {
     }
 }
 
+const isMoreThanTimeAgo = (datec: Date, time: number) => {
+    // Subtract one hour from the current date and time
+    const timeAgo = moment().subtract(time, 'minutes');
 
 
-const getCurrentSong = async (token: string) => {
-    try {
+    const dateToCheck = moment(datec);
 
-        const res = await axios("https://api.spotify.com/v1/me/player/currently-playing?market=ES", {
-            method: "GET",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token,
+    const isMoreThanAgo = dateToCheck.isBefore(timeAgo);
+    return isMoreThanAgo
+}
+
+//this function finds if the user already have a newly updated song then update it if more than 2 minutes have passed
+const CheckandGetSong = async (data: FinalUser) => {
+    const TimeSinceLastUpdate = 2
+    if (!isMoreThanTimeAgo(data.user.updatedAt, TimeSinceLastUpdate)) {
+        console.log("OLD DATA")
+        if (data.user.song_name) {
+
+            return {
+                song: {
+                    songName: data.user.song_name,
+                    songImage: data.user.song_img,
+                    artist: data.user.song_artist,
+                    link: data.user.song_link
+                },
+                user: data.user.user,
+                distance: data.distance
             }
+        }
+        return null
 
-        })
+    } else {
+        console.log("NEW DATA")
+        const song = await getCurrentSong(data.user.userId)
 
-        if (res.status == 200) {
-
-            const data = {
-                songName: res.data.item.name,
-                songImage: res.data.item.album.images[0],
-                artist: res.data.item.artists[0].name,
+        if (song) {
+            const setuser = await db.activity.update({
+                where: {
+                    userId: data.user.userId
+                }, data: {
+                    song_artist: song.artist,
+                    song_img: song.songImage,
+                    song_name: song.songName,
+                    song_link: song.link
+                }
+            })
+            return {
+                song,
+                user: data.user.user,
+                distance: data.distance
             }
-            // console.log("songData", data)
-            return data
         } else {
-            return {}
+            const setuser = await db.activity.update({
+                where: {
+                    userId: data.user.userId
+                }, data: {
+                    song_artist: "",
+                    song_img: "",
+                    song_name: "",
+                    song_link: ""
+                }
+            })
+            return null
+        }
+    }
+}
+
+
+
+
+const getCurrentSong = async (uid: string) => {
+    try {
+        const token = await checkTokenandRefresh(uid)
+        if (token) {
+
+            const res = await axios("https://api.spotify.com/v1/me/player/currently-playing?market=ES", {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token,
+                }
+
+            })
+
+            if (res.status == 200) {
+                type Song = {
+                    songName: string,
+                    songImage: string,
+                    artist: string,
+                    link: string
+                }
+                const data: Song = {
+                    songName: res.data.item.name,
+                    songImage: res.data.item.album.images[0].url,
+                    artist: res.data.item.artists[0].name,
+                    link: res.data.item.preview_url
+                }
+                // console.log("songData", data)
+                return data
+            } else {
+                return null
+            }
+        } else {
+            return null
         }
     } catch (e) {
         console.log("error in getCurrentsong")
@@ -148,10 +226,10 @@ const getTopSongs = async (token: string) => {
 
 }
 
-//curl -d client_id=$CLIENT_ID -d client_secret=$CLIENT_SECRET -d grant_type=authorization_code -d code=$CODE -d redirect_uri=$REDIRECT_URI https://accounts.spotify.com/api/token
+
 
 
 
 export {
-    getCurrentSong, getTopSongs, getSpotifyToken, checkTokenandRefresh
+    getCurrentSong, getTopSongs, getSpotifyToken, checkTokenandRefresh, CheckandGetSong
 }

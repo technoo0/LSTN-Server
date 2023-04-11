@@ -1,6 +1,6 @@
 import express from "express";
 import { LogUserIn, verifyApple } from "../utils/auth";
-import { CreateAppleUser, CreateEmailUser, CreateFacebookUser, CreateGoogleUser, userExist } from "../utils/user";
+import { CreateAppleUser, CreateEmailUser, CreateFacebookUser, CreateGoogleUser, userExist, userDataComplete } from "../utils/user";
 import axios from "axios";
 import { SendEmail } from "../utils/Email";
 import { CheckCode, CreateCode } from "../utils/code";
@@ -22,8 +22,13 @@ router.post('/apple', async (req, res, next) => {
     const user = await userExist(data.email, 'apple')
     if (user) {
         //login logic
-        console.log(user)
-        res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        // console.log(user)
+        if (userDataComplete(user)) {
+
+            res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        } else {
+            res.json({ msg: "newUser", jwt: await LogUserIn(user.id) });
+        }
     } else {
         //create user logic
         const newuser = await CreateAppleUser(data.email, req.body.fullName.givenName)
@@ -49,10 +54,17 @@ router.post('/facebook', async (req, res, next) => {
     const user = await userExist(userInfo.email, 'facebook')
     if (user) {
         //login logic
-        res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        if (userDataComplete(user)) {
+
+            res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        } else {
+            res.json({ msg: "newUser", jwt: await LogUserIn(user.id) });
+        }
     } else {
         //create user logic
+
         const newuser = await CreateFacebookUser(userInfo.email, userInfo.name, userInfo.picture.data.url)
+        console.log(newuser)
         if (newuser) {
             res.json({ msg: "newUser", jwt: await LogUserIn(newuser.id) });
         } else {
@@ -60,7 +72,7 @@ router.post('/facebook', async (req, res, next) => {
         }
 
     }
-    console.log(userInfo)
+
 })
 
 router.post('/google', async (req, res, next) => {
@@ -77,7 +89,12 @@ router.post('/google', async (req, res, next) => {
     const user = await userExist(userInfo.email, 'google')
     if (user) {
         //login logic
-        res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        if (userDataComplete(user)) {
+
+            res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+        } else {
+            res.json({ msg: "newUser", jwt: await LogUserIn(user.id) });
+        }
     } else {
         //create user logic
         const newuser = await CreateGoogleUser(userInfo.email, userInfo.given_name, userInfo.picture)
@@ -112,7 +129,12 @@ router.post("/code", async (req, res, next) => {
         const user = await userExist(req.body.email, 'email')
         if (user) {
             //login logic
-            res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+            if (userDataComplete(user)) {
+
+                res.json({ msg: "login", jwt: await LogUserIn(user.id) });
+            } else {
+                res.json({ msg: "newUser", jwt: await LogUserIn(user.id) });
+            }
         } else {
             //create user logic
             const newuser = await CreateEmailUser(req.body.email)

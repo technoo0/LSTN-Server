@@ -3,13 +3,23 @@ import { authenticateToken } from "../middlewares/Auth";
 import validator from "validator"
 import UploadPhoto from "../utils/image";
 import { db } from "../utils/db";
-import { getTopSongs, getCurrentSong, getSpotifyToken, checkTokenandRefresh } from "../utils/spotify";
+import { getTopSongs, getCurrentSong, getSpotifyToken, checkTokenandRefresh, CheckandGetSong } from "../utils/spotify";
+import { userDataComplete } from "../utils/user";
+import { findClosestUsers } from "../utils/search";
+import { FinalUser } from "../types/user"
 const router = express.Router();
 
 router.get("/", authenticateToken, (req: any, res, next) => {
     if (req.user) {
-        console.log(req.user)
-        res.json({ msg: "OK", user: req.user });
+        const { id, email, profileImage, name, bio, birthdate } = req.user
+        const NewData = { id, email, profileImage, name, bio, birthdate }
+        if (userDataComplete(req.user)) {
+            res.json({ msg: "OK", user: NewData });
+        } else {
+            res.json({ msg: "newUser", user: NewData });
+        }
+
+
     }
 });
 
@@ -74,18 +84,55 @@ router.post('/spotify', authenticateToken, async (req: any, res, next) => {
 
 
 
+router.get("/closeUsers", authenticateToken, async (req: any, res, next) => {
+    try {
 
+        const Userlocation = await db.activity.findFirst({
+            where: {
+                userId: req.user.id
+            }
+        })
+        if (Userlocation?.latitude && Userlocation.longitude) {
+            // find the closest useres to the user location
+            const CloseUsers = await findClosestUsers(Userlocation?.latitude, Userlocation.longitude, req.user.id)
+
+
+            if (CloseUsers) {
+                // get the cuttent playing song for each user
+                const find = async (userdata: FinalUser) => {
+                    // const song = await getCurrentSong(user.userId)
+                    const data = await CheckandGetSong(userdata)
+
+                    return data
+                }
+
+
+                var actions = CloseUsers.map(find);
+                var results = await Promise.all(actions);
+                let filteredresults = results.filter((data) => {
+                    return data
+                })
+                // console.log(filteredresults)
+                res.json({ msg: "OK", users: filteredresults })
+            } else {
+                res.json({ msg: "OK", users: [] })
+            }
+        } else {
+            res.json({ "msg": "ERROR" })
+        }
+
+    } catch (e) {
+        res.json({ "msg": "ERROR" })
+    }
+})
 
 router.get("/getCurrentSong", authenticateToken, async (req: any, res, next) => {
     try {
 
-        const token = await checkTokenandRefresh(req.user.id)
-        if (token) {
-            const CurrentSong = await getCurrentSong(token)
-            res.json({ msg: "OK", data: CurrentSong })
-        } else {
-            res.json({ msg: "error" })
-        }
+
+        const CurrentSong = await getCurrentSong(req.user.id)
+        res.json({ msg: "OK", data: CurrentSong })
+
     } catch (e) {
         res.json({ msg: "error" })
     }
@@ -104,6 +151,25 @@ router.get("/getTopSong", authenticateToken, async (req: any, res, next) => {
     }
 
 
+})
+
+
+router.post("/location", authenticateToken, async (req: any, res, next) => {
+    const { latitude, longitude } = req.body
+    try {
+
+        const user = await db.activity.update({
+            where: {
+                userId: req.user.id
+            }, data: {
+                latitude: latitude,
+                longitude: longitude
+            },
+        })
+        res.json({ "msg": "OK" })
+    } catch (e) {
+        res.status(500)
+    }
 })
 
 export default router
