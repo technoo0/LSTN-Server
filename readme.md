@@ -23,7 +23,8 @@ also, I implemented Oauth from multiple providers (Gmail, Apple, Facebook, and U
 
 when the user uses their Email to Authenticate there is no password the server will send a code that will expire in 5 minutes and the user need to enter the code to verify that they own the email
 
-![Auth (1).png](readme/Auth_(1).png)
+
+![Oauth](https://user-images.githubusercontent.com/65347532/231576953-61349c8b-38a0-4d50-ac99-f9bc96afcbf3.png)
 
 1. **Music App**
 
