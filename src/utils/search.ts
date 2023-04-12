@@ -31,6 +31,7 @@ async function findClosestUsers(latitude, longitude, id) {
             song_artist: true,
             user: {
                 select: {
+                    id: true,
                     name: true,
                     profileImage: true,
                     birthdate: true,

@@ -29,9 +29,11 @@ model User {
   provider        String
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  spotifyId       SpotifyToken? @relation(fields: [spotifyTokensId], references: [id])
+  spotifyId       SpotifyToken? @relation(fields: [spotifyTokensId], references: [id], onDelete: Cascade)
   spotifyTokensId String?
   Activity        Activity?
+  sendLikes       Like[]        @relation(name: "from")
+  userLikes       Like[]        @relation(name: "to")
 }
 
 model Activity {
@@ -53,4 +55,12 @@ model Code {
   code      String
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+model Like {
+  from   User   @relation("from", fields: [fromId], references: [id], onDelete: Cascade)
+  fromId String
+  to     User   @relation("to", fields: [toId], references: [id], onDelete: Cascade)
+  toId   String
+  id     String @id @default(uuid())
 }

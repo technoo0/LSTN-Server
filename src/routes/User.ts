@@ -3,7 +3,7 @@ import { authenticateToken } from "../middlewares/Auth";
 import validator from "validator"
 import UploadPhoto from "../utils/image";
 import { db } from "../utils/db";
-import { getTopSongs, getCurrentSong, getSpotifyToken, checkTokenandRefresh, CheckandGetSong } from "../utils/spotify";
+import { getTopArtists, getCurrentSong, getSpotifyToken, checkTokenandRefresh, CheckandGetSong } from "../utils/spotify";
 import { userDataComplete } from "../utils/user";
 import { findClosestUsers } from "../utils/search";
 import { FinalUser } from "../types/user"
@@ -137,11 +137,11 @@ router.get("/getCurrentSong", authenticateToken, async (req: any, res, next) => 
         res.json({ msg: "error" })
     }
 })
-router.get("/getTopSong", authenticateToken, async (req: any, res, next) => {
+router.get("/getTopArtists", authenticateToken, async (req: any, res, next) => {
     try {
         const token = await checkTokenandRefresh(req.user.id)
         if (token) {
-            const topSongs = await getTopSongs(token)
+            const topSongs = await getTopArtists(token)
             res.json({ msg: "OK", data: topSongs })
         } else {
             res.json({ msg: "error" })
@@ -168,6 +168,67 @@ router.post("/location", authenticateToken, async (req: any, res, next) => {
         })
         res.json({ "msg": "OK" })
     } catch (e) {
+        res.status(500)
+    }
+})
+
+router.post("/Liked", authenticateToken, async (req: any, res, next) => {
+    const { id } = req.body
+    try {
+
+        const LikeRec = await db.like.findFirst({
+            where: {
+                fromId: req.user.id,
+                toId: id
+            }
+        })
+        if (LikeRec) {
+            return res.json({ like: true })
+        } else {
+            return res.json({ like: false })
+        }
+    } catch (e) {
+        console.log("ERROR IN CHECK LIKE")
+        res.status(500)
+    }
+})
+router.post("/sendLike", authenticateToken, async (req: any, res, next) => {
+    const { id } = req.body
+    try {
+        const LikeRec = await db.like.create({
+            data: {
+                fromId: req.user.id,
+                toId: id,
+            }
+        })
+        res.json({ msg: "OK" })
+
+    } catch (e) {
+        console.log("ERROR IN SEND LIKE")
+        res.status(500)
+    }
+})
+
+router.post("/UnLike", authenticateToken, async (req: any, res, next) => {
+    const { id } = req.body
+    try {
+        const LikeRec = await db.like.findFirst({
+            where: {
+                fromId: req.user.id,
+                toId: id,
+            },
+        })
+        if (LikeRec) {
+            await db.like.delete({
+                where: {
+                    id: LikeRec.id
+                }
+            })
+        }
+        res.json({ msg: "OK" })
+
+    } catch (e) {
+        console.log("ERROR IN SEND LIKE")
         res.status(500)
     }
 })

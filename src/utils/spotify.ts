@@ -197,10 +197,10 @@ const getArtistImage = async (id: string, token: string) => {
 
 
 
-const getTopSongs = async (token: string) => {
+const getTopArtists = async (token: string) => {
     try {
 
-        const responese = await axios("https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=5", {
+        const responese = await axios("https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=5", {
             method: "GET",
             headers: {
                 Accept: "application/json",
@@ -209,18 +209,20 @@ const getTopSongs = async (token: string) => {
             }
 
         })
-        const TopTracks = responese.data.items
-        let finaldata: object[] = []
-        TopTracks.forEach(track => {
-            finaldata.push({
-                trak_name: track.name,
-                track_image: track.album.images[0]
+        // const TopArtists = responese.data.items
+        console.log(responese.data)
+        // let finaldata: object[] = []
+        // TopArtists.forEach(track => {
+        //     finaldata.push({
+        //         Artist_name: track.name,
+        //         Artist_image: track.album.images[0]
 
-            })
-        });
-        return finaldata
+        //     })
+        // });
+        // return finaldata
     } catch (e) {
         console.log("top songs error")
+        // console.log(e)
         return []
     }
 
@@ -231,5 +233,5 @@ const getTopSongs = async (token: string) => {
 
 
 export {
-    getCurrentSong, getTopSongs, getSpotifyToken, checkTokenandRefresh, CheckandGetSong
+    getCurrentSong, getTopArtists, getSpotifyToken, checkTokenandRefresh, CheckandGetSong
 }

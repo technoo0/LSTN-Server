@@ -4,6 +4,7 @@ import { type } from "os";
 type FinalUser = { user: CloseUser; distance: number; }
 
 type CloseUserData = {
+    id: string,
     name: string,
     profileImage: string | null,
     birthdate: Date | null,
