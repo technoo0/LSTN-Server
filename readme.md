@@ -24,7 +24,8 @@ also, I implemented Oauth from multiple providers (Gmail, Apple, Facebook, and U
 when the user uses their Email to Authenticate there is no password the server will send a code that will expire in 5 minutes and the user need to enter the code to verify that they own the email
 
 
-![Oauth](https://user-images.githubusercontent.com/65347532/231576953-61349c8b-38a0-4d50-ac99-f9bc96afcbf3.png)
+
+![AuthChart](https://user-images.githubusercontent.com/65347532/232176913-f7e66ffd-21a9-4cc0-8393-641853efeea4.png)
 
 1. **Music App**
 
@@ -48,7 +49,7 @@ then the list of the users gets checked for the users who already are listening 
 
 Spotify has a limit for queries for their API so the server only checks a user song every 2 minutes and saves the result into the database this reduces the number of queries a lot and caching the data makes the app faster 
 
-![Search.png](readme/Search.png)
+![SearchChart](https://user-images.githubusercontent.com/65347532/232176953-5ea880fd-6f8a-40a7-8274-30a758d48933.png)
 
 ## Installation
 
